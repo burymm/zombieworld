@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" ng-app="zombieWorld">
+<head>
+    <meta charset="UTF-8">
+    <title>Zombie</title>
+
+    <link rel="stylesheet" href="css/zombie.css"/>
+
+    <script src="js/vendor/angular.js"></script>
+    <script src="js/vendor/jquery-1.10.2.js"></script>
+    <script src="js/vendor/underscore-min.js"></script>
+    <script src="js/zombie-controllers.js"></script>
+    <script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+</head>
+<body>
+    <div ng-controller="ZombieGameController">
+
+        <button class="new-game" id="new-game" ng-click="newGame()">New game</button>
+
+        <div class="field" id="field">
+            <div class="human" ng-click="humanClick(human)" style="top: {{human.position.y}}px; left: {{human.position.x}}px" ng-repeat="human in humans">H</div>
+            <div class="zombie" ng-class="{die: zombie.isDie}" style="top: {{zombie.position.y}}px; left: {{zombie.position.x}}px" ng-repeat="zombie in zombies">Z</div>
+            <canvas id="ballte-field" class="battle-field">
+
+            </canvas>
+        </div>
+
+        <div class="share-twitter" ng-class="{show: game.isOver}" id="twitter-wrapper">
+
+
+        </div>
+        {{twitter.message}}
+        <p class="game-version">
+            {{game.version}}
+        </p>
+    </div>
+</body>
+</html>

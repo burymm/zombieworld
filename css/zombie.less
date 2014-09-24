@@ -1,0 +1,48 @@
+/*  zombie */
+
+@cell-size: 10px;
+@filed-size: @cell-size * 30;
+@human-color: #060;
+@zombie-color: #753;
+@zombie-die-color: #f00;
+
+
+.field {
+  position: relative;
+  width: @filed-size;
+  height: @filed-size;
+}
+
+.battle-field {
+  width: @filed-size;
+  height: @filed-size;
+  background-color: #ccc;
+}
+
+.human {
+  position: absolute;
+  width: @cell-size;
+  height: @cell-size;
+  color: @human-color;
+  cursor: pointer;
+}
+
+.zombie {
+  position: absolute;
+  width: @cell-size;
+  height: @cell-size;
+  color: @zombie-color;
+  cursor: pointer;
+
+  &.die {
+    color: @zombie-die-color;
+  }
+}
+/* end zombie*/
+
+.share-twitter {
+  display: none;
+  &.show {
+    display: block;
+  }
+}

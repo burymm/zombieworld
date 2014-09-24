@@ -1,0 +1,35 @@
+/*  zombie */
+.field {
+  position: relative;
+  width: 300px;
+  height: 300px;
+}
+.battle-field {
+  width: 300px;
+  height: 300px;
+  background-color: #ccc;
+}
+.human {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  color: #006600;
+  cursor: pointer;
+}
+.zombie {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  color: #775533;
+  cursor: pointer;
+}
+.zombie.die {
+  color: #ff0000;
+}
+/* end zombie*/
+.share-twitter {
+  display: none;
+}
+.share-twitter.show {
+  display: block;
+}
