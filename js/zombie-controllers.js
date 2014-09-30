@@ -2,6 +2,12 @@
  * Created by nikolay.bury on 27.03.14.
  */
 
+"use strict";
+
+
+var factory = new Factory();
+
+
 var zombieWorldApp = angular.module('zombieWorld', []);
 
 zombieWorldApp.controller('ZombieGameController', function ($scope) {
@@ -16,74 +22,37 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
         isOver: false
     };
     $scope.field = {
-        width: 30,
-        height: 30,
-        cellSize: 10
-    }
+        size: {
+            width: 50,
+            height: 30
+        },
+        cellSize: 10,
+        battleFiledId: '#battle-field'
+    };
     // end settings
 
     // twitter settings
     $scope.twitter = {
         message: 'Zombie won. I get 300 score. Can you get more?'
-    }
+    };
     // end twitter settings
 
     var time = 0,
-        gameTimer,
-        timeLeft;
+        gameTimer = null,
+        timeLeft = null;
 
     function Virus() {
         return {
             damage: 5
         };
-    };
-
-    function Human() {
-        this.position = {
-                x: Math.floor(Math.random() * $scope.field.width) * $scope.field.cellSize,
-                y: Math.floor(Math.random() * $scope.field.height) * $scope.field.cellSize
-            };
-
-        this.isInfected = false;
-        this.health = 50;
-        this.maxHealth = this.health;
-        this.immunity = 0.1;
-        this.maxImmunity = this.immunity;
-        this.isDie = false;
-        this.speed = Math.floor(Math.random() * 1000) + 1000;
-        this.maxSpeed = this.speed;
-        this.weapon = {
-                damage: {
-                    min: 10,
-                    max: 15
-                },
-                radius: 5
-            };
-        this.viewRange = 400;
-    };
+    }
 
 
-    Human.prototype.move = function(newX, newY) {
-        if (this.health <= 0) {
-            this.isDie = true;
-        } else {
-            if (newX) {
-                this.position.x = newX;
-            } else {
-                this.position.x += (Math.floor(Math.random() * 3) - 1);
-            }
-
-            if (newY) {
-                this.position.y = newY;
-            } else {
-                this.position.y += (Math.floor(Math.random() * 3) - 1);
-            }
-        }
-    };
 
 
-    function resurectZombie(human) {
-        $scope.zombies.push(new Zombie(human));
+    function resurectZombie(human, zombie) {
+
+        $scope.zombies.push(zombie);
         var index = $scope.humans.indexOf(human);
         $scope.humans.splice(index,1);
     }
@@ -92,84 +61,11 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
         if (!$scope.game.current.virusInWay) {
             //human.speed *= 5;
             console.log(human);
-            resurectZombie(human);
+            resurectZombie(human, factory.createObject('zombie', human));
             $scope.game.current.virusInWay = true;
         }
     };
 
-    function findNearsHuman(zombie) {
-        if ($scope.humans.length > 0) {
-            var length = _.map($scope.humans, function (human) {
-                return {human: human, distance: Math.sqrt(Math.pow(human.position.x - zombie.position.x, 2) + Math.pow(human.position.y - zombie.position.y, 2))};
-            });
-            var sorted = _.sortBy(length, function (item) {
-                return item.distance;
-            });
-            if (sorted[0].distance <= zombie.viewRange) {
-                return sorted[0];
-            }
-        }
-
-        return null;
-    };
-
-    function Zombie(human) {
-        this.speed  = Math.floor(human.maxSpeed * 0.7);
-        this.position = human.position;
-        this.weapon.damage.min = Math.floor(this.weapon.damage.min * 4);
-        this.weapon.damage.max = Math.floor(this.weapon.damage.max * 8);
-        this.isDie = false;
-        this.health = human.maxHealth * 2;
-        this.viewRange = Math.floor(human.viewRange * Math.random() * 0.5);
-    }
-
-    Zombie.prototype = new Human();
-    Zombie.prototype.move = function() {
-        if (!this.isDie) {
-            var nearstHuman = findNearsHuman(this);
-            if (nearstHuman) {
-                var nearsHumanPosition = nearstHuman.human.position;
-
-                if (nearsHumanPosition.x < this.position.x) {
-                    this.position.x -= 1;
-                } else {
-                    this.position.x += 1;
-                }
-
-                if (nearsHumanPosition.y < this.position.y) {
-                    this.position.y -= 1;
-                } else {
-                    this.position.y += 1;
-                }
-
-            }   else {
-                Human.prototype.move.call(this, null);
-            }
-        }
-    };
-
-    Zombie.prototype.timeLeft = function() {
-        this.health -= (9 - this.immunity * 5);
-        if (this.health <= 0) {
-            this.isDie = true;
-            this.justDied = true;
-        }
-    };
-
-    Zombie.prototype.getDamage = function() {
-        var damage = this.weapon.damage;
-        return Math.floor(Math.random() * (damage.max - damage.min) + damage.min);
-    };
-
-    Zombie.prototype.canAttack = function() {
-        var nearstHuman = findNearsHuman(this);
-        if (nearstHuman) {
-            if (nearstHuman.distance <= this.weapon.radius) {
-                return {human: nearstHuman.human, damage: this.getDamage()}
-            }
-        }
-        return {human: null, damage: 0};
-    };
 
 
 
@@ -180,7 +76,11 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
 
 
 
-    $scope.renderMap = function() {
+
+
+
+    $scope.renderMap = function(option) {
+        var CELL_SIZE = $scope.field.cellSize;
         var $map = $('#field');
         /*$map.html('');
         _.each($scope.humans, function(human) {
@@ -190,9 +90,48 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
         });
         */
 
+
+
+
+        if (option && option.redraw) {
+
+            $scope.fieldWidth = $scope.field.size.width *  $scope.field.cellSize;
+            $scope.fieldHeight = $scope.field.size.height *  $scope.field.cellSize;
+
+            var map = document.getElementById('battle-field'),
+                ctx = map.getContext('2d');
+
+            ctx.clearRect(0, 0, map.width, map.height);
+            console.log('cleared');
+
+            for (var x = 0; x < $scope.field.size.width; x += 1) {
+                for (var y =0; y < $scope.field.size.height; y += 1) {
+                    if ($scope.map.field[x][y].length > 0) {
+                        for (var i = 0; i < $scope.map.field[x][y].length; i <= 1) {
+                            if ($scope.map.field[x][y][i] instanceof Wall)                            {
+                                ctx.fillStyle = "#FF0000";
+                                ctx.fillRect(x * CELL_SIZE,y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                                break;
+                            }
+
+                            if ($scope.map.field[x][y][i] instanceof Human)                            {
+                                ctx.fillStyle = "#00FF00";
+                                ctx.fillRect(x * CELL_SIZE,y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                                break;
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+
+
+        // redraw map by angular
         if ($scope.$root.$$phase != '$apply' && $scope.$root.$$phase != '$digest') {
             $scope.$apply();
         }
+
     };
 
 
@@ -202,6 +141,8 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
     };
 
     function gameOver(message) {
+        clearInterval(gameTimer);
+
         var displayMessage = message + '\n' +
             'You received ' + getScores() + ' score.';
         alert(displayMessage);
@@ -219,12 +160,12 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
         twttr.widgets.load();
         //!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
         $scope.renderMap();
-        clearInterval(gameTimer);
+
     };
 
 
     function gameCycle() {
-        if ($scope.humans.length <= 0) {
+ /*       if ($scope.humans.length <= 0) {
             gameOver('Zombie wins');
         } else {
 
@@ -239,7 +180,7 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
                     // human can move on one cell in each direction
                     human.move();
                     if (human.isDie) {
-                        resurectZombie(human);
+                        resurectZombie(human, factory.createObject('zombie', human));
                         $scope.humans.died += 1;
                     }
                     isMapUpdate = true;
@@ -280,9 +221,35 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
                 $scope.renderMap();
                 //console.log($scope.humans);
             }
+        }*/
+
+        for (var x = 0; x < $scope.map.size.width; x += 1) {
+            for (var y = 0; y < $scope.map.size.height; y += 1) {
+                if ($scope.map.field[x][y].length > 0) {
+                    var cell = $scope.map.field[x][y]
+                    for (var i = 0; i < cell.length; i += 1) {
+                        if (cell[i].hasAction) {
+                            var askData = cell[i].askData();
+                            if ($scope[askData.question.class][askData.question.method](askData.question.data)) {
+                                if (askData.success.callback) {
+                                    askData.success.callback.apply(cell[i], askData.success.data);
+                                } else {
+                                    $scope[askData.success.class][askData.success.method](this, askData.success.data)
+                                }
+                                console.log(cell[i].position);
+                            }
+
+                        }
+                    }
+                }
+            }
         }
 
+        $scope.renderMap({redraw: true});
+
     }
+
+
 
     function timeLeftCycle() {
         // if pass 1 second
@@ -292,10 +259,29 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
     }
 
     $scope.newGame = function() {
+        if (gameTimer) {
+            clearInterval(gameTimer);
+        }
+        if (timeLeft) {
+            clearInterval(timeLeft);
+        }
+
+        factory = new Factory();
+        $scope.map = new Map();
+        $scope.field.size = $scope.map.createFromData(Levels[0].map);
+
+
         var humans = [];
         for (var i = 0; i < $scope.game.humans; i += 1) {
-            humans.push(new Human());
+            var position = $scope.map.getEmptyPosition();
+            if (!position) {
+                throw '[NEW GAME] Cant find empty position to put human.'
+            }
+            var human = factory.createObject('human', {position: position});
+            $scope.map.addElement(human, human.position);
+            humans.push(human);
         }
+        console.log(humans);
         $scope.humans = humans;
         $scope.humans.died = 0;
 
@@ -303,16 +289,19 @@ zombieWorldApp.controller('ZombieGameController', function ($scope) {
         $scope.zombies.died = 0;
         $scope.game.current.virusInWay = false;
 
-        // render map
-        $scope.renderMap();
+
 
 
         time = 0;
-        gameTimer = setInterval(gameCycle, 1);
+        gameTimer = setInterval(gameCycle, 100);
         timeLeft = setInterval(timeLeftCycle, $scope.game.speed);
         console.log($scope.humans);
 
         $scope.game.isOver = false;
+
+
+        // render map
+        $scope.renderMap({redraw: true});
     }
 });
 

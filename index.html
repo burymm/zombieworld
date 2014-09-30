@@ -6,9 +6,13 @@
 
     <link rel="stylesheet" href="css/zombie.css"/>
 
+
+    <script src="js/vendor/utills.js"></script>
     <script src="js/vendor/angular.js"></script>
     <script src="js/vendor/jquery-1.10.2.js"></script>
     <script src="js/vendor/underscore-min.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/classes.js"></script>
     <script src="js/zombie-controllers.js"></script>
     <script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
 </head>
@@ -20,7 +24,7 @@
         <div class="field" id="field">
             <div class="human" ng-click="humanClick(human)" style="top: {{human.position.y}}px; left: {{human.position.x}}px" ng-repeat="human in humans">H</div>
             <div class="zombie" ng-class="{die: zombie.isDie}" style="top: {{zombie.position.y}}px; left: {{zombie.position.x}}px" ng-repeat="zombie in zombies">Z</div>
-            <canvas id="ballte-field" class="battle-field">
+            <canvas id="battle-field" width="{{fieldWidth}}" height="{{fieldHeight}}"  class="battle-field" style="width: {{fieldWidth}}px; height: {{fieldHeight}}px">
 
             </canvas>
         </div>
